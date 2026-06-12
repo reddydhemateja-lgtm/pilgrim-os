@@ -2,11 +2,12 @@ import { ScrollView, Text, View, StyleSheet, TouchableOpacity, TextInput } from 
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import DarshanScreen from './DarshanScreen';
+import Hotels from './Hotels';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
-
   if (screen === 'darshan') return <DarshanScreen onBack={() => setScreen('home')} />;
+if (screen === 'hotels') return <Hotels onBack={() => setScreen('home')} />;
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="light" />
@@ -52,7 +53,7 @@ export default function App() {
         <View style={styles.featGrid}>
           {[
             ['🛕','Live Darshan Slots','Real-time queue updates and TTD timings.', 'darshan'],
-            ['🏨','Hotels Near Temple','Browse by distance, budget and rating.', ''],
+            ['🏨','Hotels Near Temple','Browse by distance, budget and rating.', 'hotels'],
             ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.', ''],
             ['🍛','Prasadam & Food','Annadanam timings and trusted restaurants.', ''],
             ['🗺️','Local Guides','Verified guides in your language.', ''],
