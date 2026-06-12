@@ -1,7 +1,12 @@
 import { ScrollView, Text, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
+import DarshanScreen from './DarshanScreen';
 
 export default function App() {
+  const [screen, setScreen] = useState('home');
+
+  if (screen === 'darshan') return <DarshanScreen onBack={() => setScreen('home')} />;
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="light" />
@@ -23,7 +28,7 @@ export default function App() {
           <Text style={styles.searchIcon}>📅</Text>
           <TextInput placeholder="Select your visit date..." style={styles.searchInput} placeholderTextColor="#a8a29e" />
         </View>
-        <TouchableOpacity style={styles.heroBtn}>
+        <TouchableOpacity style={styles.heroBtn} onPress={() => setScreen('darshan')}>
           <Text style={styles.heroBtnText}>Check Darshan Slots →</Text>
         </TouchableOpacity>
         <Text style={styles.heroNote}>Live TTD data • Free • No login needed</Text>
@@ -46,18 +51,18 @@ export default function App() {
         <Text style={styles.sectionTitle}>One app. Complete pilgrimage.</Text>
         <View style={styles.featGrid}>
           {[
-            ['🛕','Live Darshan Slots','Real-time queue updates and TTD timings.'],
-            ['🏨','Hotels Near Temple','Browse by distance, budget and rating.'],
-            ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.'],
-            ['🍛','Prasadam & Food','Annadanam timings and trusted restaurants.'],
-            ['🗺️','Local Guides','Verified guides in your language.'],
-            ['🌐','8 Languages','Telugu, Hindi, Tamil, English and more.'],
-          ].map(([icon, title, desc]) => (
-            <View key={title} style={styles.featCard}>
+            ['🛕','Live Darshan Slots','Real-time queue updates and TTD timings.', 'darshan'],
+            ['🏨','Hotels Near Temple','Browse by distance, budget and rating.', ''],
+            ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.', ''],
+            ['🍛','Prasadam & Food','Annadanam timings and trusted restaurants.', ''],
+            ['🗺️','Local Guides','Verified guides in your language.', ''],
+            ['🌐','8 Languages','Telugu, Hindi, Tamil, English and more.', ''],
+          ].map(([icon, title, desc, nav]) => (
+            <TouchableOpacity key={title} style={styles.featCard} onPress={() => nav && setScreen(nav)}>
               <Text style={styles.featIcon}>{icon}</Text>
               <Text style={styles.featTitle}>{title}</Text>
               <Text style={styles.featDesc}>{desc}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
@@ -120,4 +125,4 @@ const styles = StyleSheet.create({
   footer: { backgroundColor: '#1c1917', padding: 24, alignItems: 'center' },
   footerText: { color: '#fff', fontWeight: '700', fontSize: 13, marginBottom: 4 },
   footerSub: { color: '#78716c', fontSize: 12 },
-}); 
+});
