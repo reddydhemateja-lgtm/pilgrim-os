@@ -3,11 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import DarshanScreen from './DarshanScreen';
 import Hotels from './Hotels';
+import TransportScreen from './TransportScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
   if (screen === 'darshan') return <DarshanScreen onBack={() => setScreen('home')} />;
 if (screen === 'hotels') return <Hotels onBack={() => setScreen('home')} />;
+if (screen === 'transport') return <TransportScreen onBack={() => setScreen('home')} />;
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="light" />
@@ -54,7 +56,7 @@ if (screen === 'hotels') return <Hotels onBack={() => setScreen('home')} />;
           {[
             ['🛕','Live Darshan Slots','Real-time queue updates and TTD timings.', 'darshan'],
             ['🏨','Hotels Near Temple','Browse by distance, budget and rating.', 'hotels'],
-            ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.', ''],
+            ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.', 'transport'],
             ['🍛','Prasadam & Food','Annadanam timings and trusted restaurants.', ''],
             ['🗺️','Local Guides','Verified guides in your language.', ''],
             ['🌐','8 Languages','Telugu, Hindi, Tamil, English and more.', ''],
