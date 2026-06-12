@@ -5,6 +5,8 @@ import DarshanScreen from './DarshanScreen';
 import Hotels from './Hotels';
 import TransportScreen from './TransportScreen';
 import FoodScreen from './FoodScreen';
+import GuidesScreen from './GuidesScreen';
+import GuideRegister from './GuideRegister';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -12,6 +14,8 @@ export default function App() {
 if (screen === 'hotels') return <Hotels onBack={() => setScreen('home')} />;
 if (screen === 'transport') return <TransportScreen onBack={() => setScreen('home')} />;
 if (screen === 'food') return <FoodScreen onBack={() => setScreen('home')} />;
+if (screen === 'guides') return <GuidesScreen onBack={() => setScreen('home')} onRegister={() => setScreen('register')} />;
+if (screen === 'register') return <GuideRegister onBack={() => setScreen('guides')} />;
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="light" />
@@ -60,7 +64,7 @@ if (screen === 'food') return <FoodScreen onBack={() => setScreen('home')} />;
             ['🏨','Hotels Near Temple','Browse by distance, budget and rating.', 'hotels'],
             ['🚌','Transport & Routes','APSRTC buses and trains, live schedules.', 'transport'],
             ['🍛','Prasadam & Food','Annadanam timings and trusted restaurants.', 'food'],
-            ['🗺️','Local Guides','Verified guides in your language.', ''],
+            ['🗺️','Local Guides','Verified guides in your language.', 'guides'],
             ['🌐','8 Languages','Telugu, Hindi, Tamil, English and more.', ''],
           ].map(([icon, title, desc, nav]) => (
             <TouchableOpacity key={title} style={styles.featCard} onPress={() => nav && setScreen(nav)}>
