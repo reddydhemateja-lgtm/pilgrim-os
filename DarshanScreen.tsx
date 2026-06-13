@@ -1,13 +1,16 @@
-import { ScrollView, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
+import { useState, useEffect } from 'react';
 
-const SLOTS = [
-  { time: '3:00 AM - 6:00 AM', type: 'Sarva Darshan', tokens: 450, available: true },
-  { time: '6:00 AM - 9:00 AM', type: 'Sarva Darshan', tokens: 120, available: true },
-  { time: '9:00 AM - 12:00 PM', type: 'Sarva Darshan', tokens: 0, available: false },
-  { time: '12:00 PM - 3:00 PM', type: 'Special Entry', tokens: 80, available: true },
-  { time: '3:00 PM - 6:00 PM', type: 'Sarva Darshan', tokens: 0, available: false },
-  { time: '6:00 PM - 9:00 PM', type: 'Sarva Darshan', tokens: 210, available: true },
-];
+interface Slot {
+  time: string;
+  type: string;
+  tokens: string;
+  available: boolean;
+  waitTime: string;
+  totalPilgrims: string;
+  queueLocation: string;
+  source: string;
+}
 
 const SEVAS = [
   { name: 'Suprabhatam', time: '3:00 AM', price: '₹300' },
@@ -23,21 +26,60 @@ interface Props {
 }
 
 export default function DarshanScreen({ onBack }: Props) {
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState('');
+  const [error, setError] = useState(false);
+
+  const fetchDarshan = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/darshan');
+      const data = await response.json();
+      if (data.success) {
+        setSlots(data.data);
+        setLastUpdated(data.lastUpdated);
+        setError(false);
+      }
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDarshan();
+    const interval = setInterval(fetchDarshan, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+ const openTTD = () => {
+    if (typeof window !== 'undefined') {
+      window.open('https://ttdevasthanams.ap.gov.in', '_blank');
+    } else {
+      Linking.openURL('https://ttdevasthanams.ap.gov.in');
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
 
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>🛕 Darshan Slots</Text>
-        <Text style={styles.headerSub}>Live data updated every 10 seconds</Text>
+        <Text style={styles.headerSub}>
+          {lastUpdated ? `Updated: ${new Date(lastUpdated).toLocaleTimeString()}` : 'Fetching live data...'}
+        </Text>
         <View style={styles.liveBadge}>
           <View style={styles.liveDot} />
           <Text style={styles.liveText}>LIVE</Text>
         </View>
       </View>
 
+      {/* DATE BAR */}
       <View style={styles.dateBar}>
         <Text style={styles.dateText}>📅 Today — {new Date().toDateString()}</Text>
         <TouchableOpacity style={styles.changeBtn}>
@@ -45,46 +87,91 @@ export default function DarshanScreen({ onBack }: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* DISCLAIMER */}
       <View style={styles.disclaimer}>
         <Text style={styles.disclaimerText}>
-          ⚠️ Data sourced from TTD official website. Always verify at ttdsevaonline.com
+          ⚠️ Data sourced from TTD News. Always verify at ttdevasthanams.ap.gov.in
         </Text>
       </View>
 
+      {/* LIVE STATS */}
+      {slots.length > 0 && (
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>{slots[0]?.totalPilgrims || 'N/A'}</Text>
+            <Text style={styles.statLabel}>Pilgrims Today</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>{slots[0]?.waitTime || 'N/A'}</Text>
+            <Text style={styles.statLabel}>Sarva Darshan Wait</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>{slots[0]?.queueLocation || 'N/A'}</Text>
+            <Text style={styles.statLabel}>Queue Location</Text>
+          </View>
+        </View>
+      )}
+
+      {/* SLOTS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Darshan Timings</Text>
-        {SLOTS.map((slot, i) => (
-          <View key={i} style={[styles.slotCard, !slot.available && styles.slotUnavailable]}>
-            <View style={styles.slotLeft}>
-              <Text style={styles.slotTime}>{slot.time}</Text>
-              <Text style={styles.slotType}>{slot.type}</Text>
-            </View>
-            <View style={styles.slotRight}>
-              {slot.available ? (
-                <View>
-                  <Text style={styles.slotTokens}>{slot.tokens} tokens</Text>
-                  <View style={styles.availableBadge}>
-                    <Text style={styles.availableText}>Available</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.fullBadge}>
-                  <Text style={styles.fullText}>Housefull</Text>
-                </View>
-              )}
-            </View>
+
+        {loading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#ea580c" />
+            <Text style={styles.loadingText}>Fetching live TTD data...</Text>
           </View>
-        ))}
+        ) : error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>⚠️ Could not connect to server.</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={fetchDarshan}>
+              <Text style={styles.retryBtnText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          slots.map((slot, i) => (
+            <View key={i} style={styles.slotCard}>
+              <View style={styles.slotLeft}>
+                <Text style={styles.slotTime}>{slot.time}</Text>
+                <Text style={styles.slotType}>{slot.type}</Text>
+                <Text style={styles.slotSource}>Source: {slot.source}</Text>
+              </View>
+              <View style={styles.slotRight}>
+                {slot.type.includes('Special Entry') ? (
+                  <TouchableOpacity style={styles.bookBtn} onPress={openTTD}>
+                    <Text style={styles.bookBtnText}>Book ₹300 →</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.slotTokens}>{slot.tokens}</Text>
+                )}
+                <View style={styles.availableBadge}>
+                  <Text style={styles.availableText}>Available</Text>
+                </View>
+              </View>
+            </View>
+          ))
+        )}
       </View>
 
+      {/* NOTIFY */}
       <View style={styles.notifySection}>
-        <Text style={styles.notifyTitle}>🔔 Want to know when new tokens release?</Text>
+        <Text style={styles.notifyTitle}>🔔 Get notified when tickets release!</Text>
         <Text style={styles.notifySub}>We'll alert you the moment TTD releases new slots</Text>
         <TouchableOpacity style={styles.notifyBtn}>
           <Text style={styles.notifyBtnText}>Notify me instantly →</Text>
         </TouchableOpacity>
       </View>
 
+      {/* BOOK ON TTD */}
+      <View style={styles.ttdSection}>
+        <Text style={styles.ttdTitle}>🎫 Book Tickets on TTD Official</Text>
+        <Text style={styles.ttdSub}>Special Entry ₹300 • VIP Darshan • Sevas</Text>
+        <TouchableOpacity style={styles.ttdBtn} onPress={openTTD}>
+          <Text style={styles.ttdBtnText}>Open TTD Official Website →</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* SEVAS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Available Sevas</Text>
         {SEVAS.map((seva, i) => (
@@ -95,7 +182,7 @@ export default function DarshanScreen({ onBack }: Props) {
             </View>
             <View style={styles.sevaRight}>
               <Text style={styles.sevaPrice}>{seva.price}</Text>
-              <TouchableOpacity style={styles.sevaBtn}>
+              <TouchableOpacity style={styles.sevaBtn} onPress={openTTD}>
                 <Text style={styles.sevaBtnText}>Book</Text>
               </TouchableOpacity>
             </View>
@@ -103,14 +190,15 @@ export default function DarshanScreen({ onBack }: Props) {
         ))}
       </View>
 
+      {/* QUEUE STATUS */}
       <View style={styles.queueSection}>
         <Text style={styles.queueTitle}>📊 Current Queue Status</Text>
         <View style={styles.queueGrid}>
           {[
-            ['~45 min', 'Special Entry wait'],
-            ['~3 hrs', 'Sarva Darshan wait'],
-            ['12°C', 'Temple temperature'],
-            ['Low', 'Current crowd level'],
+            [slots[0]?.waitTime || 'N/A', 'Sarva Darshan wait'],
+            ['1-2 hrs', 'Special Entry wait'],
+            [slots[0]?.totalPilgrims || 'N/A', 'Pilgrims today'],
+            [slots[0]?.queueLocation || 'N/A', 'Queue location'],
           ].map(([val, label]) => (
             <View key={label} style={styles.queueCard}>
               <Text style={styles.queueVal}>{val}</Text>
@@ -140,24 +228,39 @@ const styles = StyleSheet.create({
   changeBtnText: { fontSize: 12, fontWeight: '700', color: '#fff' },
   disclaimer: { backgroundColor: '#fef3c7', padding: 12, borderBottomWidth: 1, borderBottomColor: '#fde68a' },
   disclaimerText: { fontSize: 11, color: '#92400e', textAlign: 'center' },
+  statsRow: { flexDirection: 'row', padding: 12, backgroundColor: '#fff7ed', borderBottomWidth: 1, borderBottomColor: '#fde68a' },
+  statCard: { flex: 1, alignItems: 'center', padding: 8 },
+  statVal: { fontSize: 13, fontWeight: '900', color: '#ea580c', textAlign: 'center' },
+  statLabel: { fontSize: 10, color: '#78716c', textAlign: 'center', marginTop: 2 },
   section: { padding: 16 },
   sectionTitle: { fontSize: 18, fontWeight: '900', color: '#1c1917', marginBottom: 12 },
+  loadingBox: { alignItems: 'center', padding: 32 },
+  loadingText: { marginTop: 12, fontSize: 14, color: '#78716c' },
+  errorBox: { backgroundColor: '#fee2e2', borderRadius: 14, padding: 16, alignItems: 'center' },
+  errorText: { fontSize: 13, color: '#dc2626', marginBottom: 10 },
+  retryBtn: { backgroundColor: '#ea580c', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 10 },
+  retryBtnText: { color: '#fff', fontWeight: '700' },
   slotCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 14, padding: 16, marginBottom: 8 },
-  slotUnavailable: { backgroundColor: '#f5f5f4', borderColor: '#e7e5e4', opacity: 0.7 },
   slotLeft: { flex: 1 },
   slotTime: { fontSize: 14, fontWeight: '700', color: '#1c1917', marginBottom: 2 },
   slotType: { fontSize: 12, color: '#78716c' },
+  slotSource: { fontSize: 10, color: '#a8a29e', marginTop: 2 },
   slotRight: { alignItems: 'flex-end' },
-  slotTokens: { fontSize: 13, fontWeight: '700', color: '#ea580c', marginBottom: 4 },
+  slotTokens: { fontSize: 11, color: '#ea580c', marginBottom: 4, textAlign: 'right' },
+  bookBtn: { backgroundColor: '#ea580c', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginBottom: 4 },
+  bookBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
   availableBadge: { backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   availableText: { fontSize: 11, fontWeight: '700', color: '#16a34a' },
-  fullBadge: { backgroundColor: '#fee2e2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  fullText: { fontSize: 11, fontWeight: '700', color: '#dc2626' },
   notifySection: { margin: 16, backgroundColor: '#1c1917', borderRadius: 20, padding: 20, alignItems: 'center' },
   notifyTitle: { fontSize: 16, fontWeight: '800', color: '#fff', textAlign: 'center', marginBottom: 6 },
   notifySub: { fontSize: 12, color: '#a8a29e', textAlign: 'center', marginBottom: 16 },
   notifyBtn: { backgroundColor: '#ea580c', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
   notifyBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  ttdSection: { margin: 16, backgroundColor: '#fff7ed', borderRadius: 20, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#fde68a' },
+  ttdTitle: { fontSize: 16, fontWeight: '800', color: '#1c1917', textAlign: 'center', marginBottom: 4 },
+  ttdSub: { fontSize: 12, color: '#78716c', textAlign: 'center', marginBottom: 16 },
+  ttdBtn: { backgroundColor: '#ea580c', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
+  ttdBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   sevaCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 14, padding: 16, marginBottom: 8 },
   sevaName: { fontSize: 14, fontWeight: '700', color: '#1c1917', marginBottom: 2 },
   sevaTime: { fontSize: 12, color: '#78716c' },
@@ -169,6 +272,6 @@ const styles = StyleSheet.create({
   queueTitle: { fontSize: 16, fontWeight: '800', color: '#1c1917', marginBottom: 16 },
   queueGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   queueCard: { backgroundColor: '#fff', borderRadius: 14, padding: 14, alignItems: 'center', width: '47%', borderWidth: 1, borderColor: '#fde68a', margin: '1.5%' },
-  queueVal: { fontSize: 20, fontWeight: '900', color: '#ea580c', marginBottom: 4 },
+  queueVal: { fontSize: 14, fontWeight: '900', color: '#ea580c', marginBottom: 4, textAlign: 'center' },
   queueLabel: { fontSize: 11, color: '#78716c', textAlign: 'center' },
 });
