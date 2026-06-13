@@ -33,7 +33,7 @@ export default function DarshanScreen({ onBack }: Props) {
 
   const fetchDarshan = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/darshan');
+      const response = await fetch('https://pilgrim-os-backend.onrender.com/api/darshan');
       const data = await response.json();
       if (data.success) {
         setSlots(data.data);
