@@ -7,6 +7,7 @@ import TransportScreen from './TransportScreen';
 import FoodScreen from './FoodScreen';
 import GuidesScreen from './GuidesScreen';
 import GuideRegister from './GuideRegister';
+import AdminPanel from './AdminPanel';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -16,17 +17,23 @@ if (screen === 'transport') return <TransportScreen onBack={() => setScreen('hom
 if (screen === 'food') return <FoodScreen onBack={() => setScreen('home')} />;
 if (screen === 'guides') return <GuidesScreen onBack={() => setScreen('home')} onRegister={() => setScreen('register')} />;
 if (screen === 'register') return <GuideRegister onBack={() => setScreen('guides')} />;
+if (screen === 'admin') return <AdminPanel onBack={() => setScreen('home')} />;
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="light" />
 
       {/* NAVBAR */}
-      <View style={styles.nav}>
-        <Text style={styles.navLogo}>🛕 PilgrimOS</Text>
-        <TouchableOpacity style={styles.navBtn}>
-          <Text style={styles.navBtnText}>Plan Trip →</Text>
-        </TouchableOpacity>
-      </View>
+<View style={styles.nav}>
+  <Text style={styles.navLogo}>🛕 PilgrimOS</Text>
+  <View style={{ flexDirection: 'row', gap: 8 }}>
+    <TouchableOpacity style={styles.navBtn}>
+      <Text style={styles.navBtnText}>Plan Trip →</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.navBtn} onPress={() => setScreen('admin')}>
+      <Text style={styles.navBtnText}>Admin 🔐</Text>
+    </TouchableOpacity>
+  </View>
+</View>
 
       {/* HERO */}
       <View style={styles.hero}>
