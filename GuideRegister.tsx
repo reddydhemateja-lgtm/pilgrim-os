@@ -14,8 +14,8 @@ export default function GuideRegister({ onBack }: Props) {
   const [experience, setExperience] = useState('');
   const [speciality, setSpeciality] = useState('');
   const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
- const [submitted, setSubmitted] = useState(false);
-const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const toggleLanguage = (lang: string) => {
     if (selectedLangs.includes(lang)) {
@@ -25,7 +25,7 @@ const [errors, setErrors] = useState<{[key: string]: string}>({});
     }
   };
 
- const validate = () => {
+  const validate = () => {
     const newErrors: {[key: string]: string} = {};
     if (!name || name.trim().length < 3) newErrors.name = '❌ Name must be at least 3 characters';
     if (!phone || !/^\d{10}$/.test(phone)) newErrors.phone = '❌ Enter valid 10 digit mobile number';
@@ -92,53 +92,57 @@ const [errors, setErrors] = useState<{[key: string]: string}>({});
 
       {/* FORM */}
       <View style={styles.form}>
-
         <Text style={styles.formTitle}>Your Details</Text>
 
+        {/* NAME */}
         <Text style={styles.label}>Full Name *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.name ? styles.inputError : null]}
           placeholder="Enter your full name"
           placeholderTextColor="#a8a29e"
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => { setName(text); setErrors({...errors, name: ''}); }}
         />
-<Text style={styles.label}>Full Name *</Text>
-<TextInput
-  style={[styles.input, errors.name ? styles.inputError : null]}
-  placeholder="Enter your full name"
-  placeholderTextColor="#a8a29e"
-  value={name}
-  onChangeText={(text) => { setName(text); setErrors({...errors, name: ''}); }}
-/>
-{errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+        {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
 
-     <Text style={styles.label}>Aadhar Number *</Text>
-<TextInput
-  style={[styles.input, errors.aadhar ? styles.inputError : null]}
-  placeholder="Enter 12 digit Aadhar number"
-  placeholderTextColor="#a8a29e"
-  keyboardType="number-pad"
-  maxLength={12}
-  value={aadhar}
-  onChangeText={(text) => { setAadhar(text); setErrors({...errors, aadhar: ''}); }}
-/>
-{errors.aadhar ? <Text style={styles.errorText}>{errors.aadhar}</Text> : null}
-
+        {/* PHONE */}
         <Text style={styles.label}>WhatsApp Number *</Text>
-<TextInput
-  style={[styles.input, errors.phone ? styles.inputError : null]}
-  placeholder="Enter 10 digit mobile number"
-  placeholderTextColor="#a8a29e"
-  keyboardType="phone-pad"
-  maxLength={10}
-  value={phone}
-  onChangeText={(text) => { setPhone(text); setErrors({...errors, phone: ''}); }}
-/>
-{errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+        <TextInput
+          style={[styles.input, errors.phone ? styles.inputError : null]}
+          placeholder="Enter 10 digit mobile number"
+          placeholderTextColor="#a8a29e"
+          keyboardType="phone-pad"
+          maxLength={10}
+          value={phone}
+          onChangeText={(text) => { setPhone(text); setErrors({...errors, phone: ''}); }}
+        />
+        {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
 
-       <Text style={styles.label}>Languages You Speak *</Text>
-{errors.languages ? <Text style={styles.errorText}>{errors.languages}</Text> : null}
+        {/* AADHAR */}
+        <Text style={styles.label}>Aadhar Number *</Text>
+        <TextInput
+          style={[styles.input, errors.aadhar ? styles.inputError : null]}
+          placeholder="Enter 12 digit Aadhar number"
+          placeholderTextColor="#a8a29e"
+          keyboardType="number-pad"
+          maxLength={12}
+          value={aadhar}
+          onChangeText={(text) => { setAadhar(text); setErrors({...errors, aadhar: ''}); }}
+        />
+        {errors.aadhar ? <Text style={styles.errorText}>{errors.aadhar}</Text> : null}
+
+        {/* EXPERIENCE */}
+        <Text style={styles.label}>Years of Experience</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. 5 years"
+          placeholderTextColor="#a8a29e"
+          value={experience}
+          onChangeText={setExperience}
+        />
+
+        {/* SPECIALITY */}
+        <Text style={styles.label}>Your Speciality</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g. Temple rituals & seva expert"
@@ -147,7 +151,9 @@ const [errors, setErrors] = useState<{[key: string]: string}>({});
           onChangeText={setSpeciality}
         />
 
+        {/* LANGUAGES */}
         <Text style={styles.label}>Languages You Speak *</Text>
+        {errors.languages ? <Text style={styles.errorText}>{errors.languages}</Text> : null}
         <View style={styles.languagesGrid}>
           {LANGUAGES.map((lang) => (
             <TouchableOpacity
@@ -192,6 +198,8 @@ const styles = StyleSheet.create({
   formTitle: { fontSize: 18, fontWeight: '900', color: '#1c1917', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '700', color: '#1c1917', marginBottom: 6, marginTop: 12 },
   input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1c1917' },
+  inputError: { borderColor: '#dc2626', borderWidth: 2 },
+  errorText: { color: '#dc2626', fontSize: 12, marginTop: 4 },
   languagesGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
   langChip: { borderWidth: 1, borderColor: '#fed7aa', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, marginRight: 8, marginBottom: 8 },
   langChipSelected: { backgroundColor: '#ea580c', borderColor: '#ea580c' },
@@ -207,6 +215,4 @@ const styles = StyleSheet.create({
   successSub: { fontSize: 14, color: '#78716c', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   successBtn: { backgroundColor: '#ea580c', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24 },
   successBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-
-inputError: { borderColor: '#dc2626', borderWidth: 2 },
-errorText: { color: '#dc2626', fontSize: 12, marginTop: 4, marginBottom: 4 },});
+}); 
