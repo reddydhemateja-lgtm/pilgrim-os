@@ -24,12 +24,26 @@ export default function GuideRegister({ onBack }: Props) {
     }
   };
 
-  const handleSubmit = () => {
+ const handleSubmit = async () => {
     if (!name || !phone || !aadhar || selectedLangs.length === 0) {
       alert('Please fill all required fields and select at least one language.');
       return;
     }
-    setSubmitted(true);
+    try {
+      const response = await fetch('https://pilgrim-os-backend.onrender.com/api/guides/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, aadhar, experience, speciality, languages: selectedLangs }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        alert('Registration failed. Please try again.');
+      }
+    } catch (error) {
+      alert('Connection error. Please try again.');
+    }
   };
 
   if (submitted) {
