@@ -14,7 +14,8 @@ export default function GuideRegister({ onBack }: Props) {
   const [experience, setExperience] = useState('');
   const [speciality, setSpeciality] = useState('');
   const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
-  const [submitted, setSubmitted] = useState(false);
+ const [submitted, setSubmitted] = useState(false);
+const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const toggleLanguage = (lang: string) => {
     if (selectedLangs.includes(lang)) {
@@ -24,11 +25,18 @@ export default function GuideRegister({ onBack }: Props) {
     }
   };
 
- const handleSubmit = async () => {
-    if (!name || !phone || !aadhar || selectedLangs.length === 0) {
-      alert('Please fill all required fields and select at least one language.');
-      return;
-    }
+ const validate = () => {
+    const newErrors: {[key: string]: string} = {};
+    if (!name || name.trim().length < 3) newErrors.name = '❌ Name must be at least 3 characters';
+    if (!phone || !/^\d{10}$/.test(phone)) newErrors.phone = '❌ Enter valid 10 digit mobile number';
+    if (!aadhar || !/^\d{12}$/.test(aadhar)) newErrors.aadhar = '❌ Enter valid 12 digit Aadhar number';
+    if (selectedLangs.length === 0) newErrors.languages = '❌ Select at least one language';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
     try {
       const response = await fetch('https://pilgrim-os-backend.onrender.com/api/guides/register', {
         method: 'POST',
@@ -95,39 +103,42 @@ export default function GuideRegister({ onBack }: Props) {
           value={name}
           onChangeText={setName}
         />
+<Text style={styles.label}>Full Name *</Text>
+<TextInput
+  style={[styles.input, errors.name ? styles.inputError : null]}
+  placeholder="Enter your full name"
+  placeholderTextColor="#a8a29e"
+  value={name}
+  onChangeText={(text) => { setName(text); setErrors({...errors, name: ''}); }}
+/>
+{errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+
+     <Text style={styles.label}>Aadhar Number *</Text>
+<TextInput
+  style={[styles.input, errors.aadhar ? styles.inputError : null]}
+  placeholder="Enter 12 digit Aadhar number"
+  placeholderTextColor="#a8a29e"
+  keyboardType="number-pad"
+  maxLength={12}
+  value={aadhar}
+  onChangeText={(text) => { setAadhar(text); setErrors({...errors, aadhar: ''}); }}
+/>
+{errors.aadhar ? <Text style={styles.errorText}>{errors.aadhar}</Text> : null}
 
         <Text style={styles.label}>WhatsApp Number *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter 10 digit mobile number"
-          placeholderTextColor="#a8a29e"
-          keyboardType="phone-pad"
-          maxLength={10}
-          value={phone}
-          onChangeText={setPhone}
-        />
+<TextInput
+  style={[styles.input, errors.phone ? styles.inputError : null]}
+  placeholder="Enter 10 digit mobile number"
+  placeholderTextColor="#a8a29e"
+  keyboardType="phone-pad"
+  maxLength={10}
+  value={phone}
+  onChangeText={(text) => { setPhone(text); setErrors({...errors, phone: ''}); }}
+/>
+{errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
 
-        <Text style={styles.label}>Aadhar Number *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter 12 digit Aadhar number"
-          placeholderTextColor="#a8a29e"
-          keyboardType="number-pad"
-          maxLength={12}
-          value={aadhar}
-          onChangeText={setAadhar}
-        />
-
-        <Text style={styles.label}>Years of Experience</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 5 years"
-          placeholderTextColor="#a8a29e"
-          value={experience}
-          onChangeText={setExperience}
-        />
-
-        <Text style={styles.label}>Your Speciality</Text>
+       <Text style={styles.label}>Languages You Speak *</Text>
+{errors.languages ? <Text style={styles.errorText}>{errors.languages}</Text> : null}
         <TextInput
           style={styles.input}
           placeholder="e.g. Temple rituals & seva expert"
@@ -196,4 +207,6 @@ const styles = StyleSheet.create({
   successSub: { fontSize: 14, color: '#78716c', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   successBtn: { backgroundColor: '#ea580c', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24 },
   successBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-});
+
+inputError: { borderColor: '#dc2626', borderWidth: 2 },
+errorText: { color: '#dc2626', fontSize: 12, marginTop: 4, marginBottom: 4 },});
