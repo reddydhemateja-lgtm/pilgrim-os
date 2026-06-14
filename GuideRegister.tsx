@@ -11,6 +11,7 @@ export default function GuideRegister({ onBack }: Props) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [aadhar, setAadhar] = useState('');
+  const [license, setLicense] = useState('');
   const [experience, setExperience] = useState('');
   const [speciality, setSpeciality] = useState('');
   const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
@@ -30,6 +31,7 @@ export default function GuideRegister({ onBack }: Props) {
     if (!name || name.trim().length < 3) newErrors.name = '❌ Name must be at least 3 characters';
     if (!phone || !/^\d{10}$/.test(phone)) newErrors.phone = '❌ Enter valid 10 digit mobile number';
     if (!aadhar || !/^\d{12}$/.test(aadhar)) newErrors.aadhar = '❌ Enter valid 12 digit Aadhar number';
+    if (!license) newErrors.license = '❌ TTD Guide License number is required';
     if (selectedLangs.length === 0) newErrors.languages = '❌ Select at least one language';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -41,7 +43,7 @@ export default function GuideRegister({ onBack }: Props) {
       const response = await fetch('https://pilgrim-os-backend.onrender.com/api/guides/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, aadhar, experience, speciality, languages: selectedLangs }),
+        body: JSON.stringify({ name, phone, aadhar, license, experience, speciality, languages: selectedLangs }),
       });
       const data = await response.json();
       if (data.success) {
@@ -131,6 +133,17 @@ export default function GuideRegister({ onBack }: Props) {
         />
         {errors.aadhar ? <Text style={styles.errorText}>{errors.aadhar}</Text> : null}
 
+        {/* TTD LICENSE */}
+        <Text style={styles.label}>TTD Guide License Number *</Text>
+        <TextInput
+          style={[styles.input, errors.license ? styles.inputError : null]}
+          placeholder="Enter your TTD guide license number"
+          placeholderTextColor="#a8a29e"
+          value={license}
+          onChangeText={(text) => { setLicense(text); setErrors({...errors, license: ''}); }}
+        />
+        {errors.license ? <Text style={styles.errorText}>{errors.license}</Text> : null}
+
         {/* EXPERIENCE */}
         <Text style={styles.label}>Years of Experience</Text>
         <TextInput
@@ -215,4 +228,4 @@ const styles = StyleSheet.create({
   successSub: { fontSize: 14, color: '#78716c', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   successBtn: { backgroundColor: '#ea580c', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24 },
   successBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-}); 
+});
