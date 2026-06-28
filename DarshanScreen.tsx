@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
+import { ScrollView, Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, Linking, TextInput, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 
 interface Slot {
@@ -21,6 +21,8 @@ const SEVAS = [
   { name: 'Dolotsavam', time: '7:00 PM', price: '₹400' },
 ];
 
+const BACKEND = 'https://pilgrim-os-backend.onrender.com';
+
 interface Props {
   onBack: () => void;
 }
@@ -31,9 +33,14 @@ export default function DarshanScreen({ onBack }: Props) {
   const [lastUpdated, setLastUpdated] = useState('');
   const [error, setError] = useState(false);
 
+  // Notify Me state
+  const [phone, setPhone] = useState('');
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+
   const fetchDarshan = async () => {
     try {
-      const response = await fetch('https://pilgrim-os-backend.onrender.com/api/darshan');
+      const response = await fetch(`${BACKEND}/api/darshan`);
       const data = await response.json();
       if (data.success) {
         setSlots(data.data);
@@ -53,12 +60,37 @@ export default function DarshanScreen({ onBack }: Props) {
     return () => clearInterval(interval);
   }, []);
 
- const openTTD = () => {
+  const openTTD = () => {
     if (typeof window !== 'undefined') {
       window.open('https://ttdevasthanams.ap.gov.in', '_blank');
     } else {
       Linking.openURL('https://ttdevasthanams.ap.gov.in');
     }
+  };
+
+  const handleNotify = async () => {
+    if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+      Alert.alert('Invalid number', 'Enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+    setNotifyLoading(true);
+    try {
+      const res = await fetch(`${BACKEND}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, type: 'darshan-slot', date: new Date().toISOString() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifySuccess(true);
+        setPhone('');
+      } else {
+        Alert.alert('Error', data.message || 'Something went wrong.');
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Could not reach server. Try again.');
+    }
+    setNotifyLoading(false);
   };
 
   return (
@@ -115,7 +147,6 @@ export default function DarshanScreen({ onBack }: Props) {
       {/* SLOTS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Darshan Timings</Text>
-
         {loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#ea580c" />
@@ -153,13 +184,37 @@ export default function DarshanScreen({ onBack }: Props) {
         )}
       </View>
 
-      {/* NOTIFY */}
+      {/* NOTIFY ME — now connected to DB */}
       <View style={styles.notifySection}>
         <Text style={styles.notifyTitle}>🔔 Get notified when tickets release!</Text>
         <Text style={styles.notifySub}>We'll alert you the moment TTD releases new slots</Text>
-        <TouchableOpacity style={styles.notifyBtn}>
-          <Text style={styles.notifyBtnText}>Notify me instantly →</Text>
-        </TouchableOpacity>
+
+        {notifySuccess ? (
+          <View style={styles.successBox}>
+            <Text style={styles.successText}>✅ You're on the list! We'll notify you.</Text>
+          </View>
+        ) : (
+          <>
+            <TextInput
+              placeholder="Enter your WhatsApp number"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              maxLength={10}
+              placeholderTextColor="#a8a29e"
+              style={styles.notifyInput}
+            />
+            <TouchableOpacity
+              style={styles.notifyBtn}
+              onPress={handleNotify}
+              disabled={notifyLoading}
+            >
+              <Text style={styles.notifyBtnText}>
+                {notifyLoading ? 'Saving...' : 'Notify me instantly →'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       {/* BOOK ON TTD */}
@@ -254,8 +309,11 @@ const styles = StyleSheet.create({
   notifySection: { margin: 16, backgroundColor: '#1c1917', borderRadius: 20, padding: 20, alignItems: 'center' },
   notifyTitle: { fontSize: 16, fontWeight: '800', color: '#fff', textAlign: 'center', marginBottom: 6 },
   notifySub: { fontSize: 12, color: '#a8a29e', textAlign: 'center', marginBottom: 16 },
-  notifyBtn: { backgroundColor: '#ea580c', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
+  notifyInput: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 12, fontSize: 14, marginBottom: 10, color: '#1c1917' },
+  notifyBtn: { backgroundColor: '#ea580c', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24, width: '100%', alignItems: 'center' },
   notifyBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  successBox: { backgroundColor: '#d1fae5', padding: 14, borderRadius: 14, width: '100%', alignItems: 'center' },
+  successText: { color: '#065f46', fontWeight: '700', fontSize: 14 },
   ttdSection: { margin: 16, backgroundColor: '#fff7ed', borderRadius: 20, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#fde68a' },
   ttdTitle: { fontSize: 16, fontWeight: '800', color: '#1c1917', textAlign: 'center', marginBottom: 4 },
   ttdSub: { fontSize: 12, color: '#78716c', textAlign: 'center', marginBottom: 16 },
